@@ -113,4 +113,13 @@ Dense(1, activation='sigmoid')
 
 ## Conclusion
 
-Proyek ini membandingkan dua pendekatan sistem rekomendasi. Collaborative Filtering memberikan akurasi lebih tinggi dalam prediksi rating, sementara Content-Based Filtering unggul untuk cold-start. Kombinasi keduanya (hybrid model) disarankan untuk sistem rekomendasi produksi.
+Proyek ini mengimplementasikan dua pendekatan sistem rekomendasi, yaitu Content-Based Filtering (CBF) dan Collaborative Filtering (CF), menggunakan data MovieLens 100K.
+
+* CBF memberikan rekomendasi berdasarkan kesamaan konten, khususnya genre film. 
+Pendekatan ini efektif untuk cold-start item (film baru) dan menghasilkan rekomendasi yang sangat mirip dengan film acuan.
+
+* CF menggunakan model neural network dengan embedding layer untuk mempelajari pola rating antar pengguna dan item. Hasilnya menunjukkan kemampuan dalam menangkap preferensi personal pengguna secara lebih fleksibel, bahkan ketika film tidak memiliki genre yang serupa.
+
+* Evaluasi metrik menunjukkan bahwa CBF memiliki keunggulan dalam relevansi genre, sementara CF unggul dalam memahami pola interaksi pengguna.
+
+Secara keseluruhan, CBF dan CF saling melengkapi, dan menggabungkan keduanya dalam sistem hybrid akan sangat bermanfaat untuk meningkatkan kualitas rekomendasi. Model hybrid akan mengatasi kelemahan masing-masing pendekatan, menghasilkan sistem yang lebih akurat dan adaptif terhadap kebutuhan pengguna.

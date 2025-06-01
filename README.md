@@ -30,7 +30,7 @@ Terdapat dua pendekatan solusi:
 ## Data Understanding
 
 ### Dataset
-- Sumber data: [MovieLens 100K](https://grouplens.org/datasets/movielens/100k/)
+- Sumber data: [[MovieLens 100K](https://grouplens.org/datasets/movielens/100k/)](https://www.kaggle.com/datasets/fuzzywizard/movielens-100k-small-dataset/data)
 - Terdapat dua file, yaitu movies.csv dan ratings.csv, dengan informasi masing-masing:
   ![image](https://github.com/user-attachments/assets/2aa959dc-eaf8-4a5b-b3f9-8e6a842d7e24)<br>
   Dataset movies.csv terdiri dari 9.742 baris dan 3 kolom yaitu movieId, title, dan genres. Fungsi head() menampilkan 5 baris pertama yang menunjukkan bahwa setiap film memiliki ID unik, judul yang mencakup tahun rilis, serta genre yang dituliskan dalam format teks dengan pemisah tanda |. Fungsi info() menunjukkan bahwa tidak terdapat nilai kosong pada ketiga kolom dan tipe data yang digunakan mencakup integer untuk ID film serta objek (string) untuk judul dan genre.<br>

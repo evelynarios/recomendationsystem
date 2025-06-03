@@ -2,12 +2,15 @@
 
 ## Project Overview
 
-Sistem rekomendasi adalah teknologi yang digunakan untuk memberikan saran produk atau konten kepada pengguna berdasarkan preferensi mereka. Dalam proyek ini, kami membangun dua sistem rekomendasi film dengan pendekatan **Content-Based Filtering (CBF)** dan **Collaborative Filtering (CF)** menggunakan data MovieLens 100K.
+Sistem rekomendasi merupakan salah satu komponen penting dalam ekosistem digital modern, terutama pada platform streaming film, untuk membantu pengguna menemukan konten yang relevan berdasarkan preferensi mereka. Dalam konteks jumlah film yang terus bertambah, pengguna kerap kesulitan dalam memilih tontonan yang sesuai. Untuk mengatasi masalah ini, sistem rekomendasi memanfaatkan algoritma pembelajaran mesin guna menghasilkan saran yang dipersonalisasi, sehingga mampu meningkatkan kepuasan pengguna dan mempertahankan loyalitas terhadap platform (Aggarwal, 2016).
 
-Sistem ini penting untuk meningkatkan kepuasan pengguna dalam platform streaming dan e-commerce, karena mampu mempersonalisasi pengalaman pengguna.
+Dalam proyek ini, kami membangun dua sistem rekomendasi film berbasis data *MovieLens 100K* dengan pendekatan:
+- **Content-Based Filtering (CBF)**, yang merekomendasikan film berdasarkan kemiripan fitur antar item, seperti genre atau kata kunci yang sering muncul dalam film yang disukai pengguna.
+- **Collaborative Filtering (CF)**, yang menyarankan film berdasarkan kesamaan perilaku antara pengguna, yaitu dengan mencari pengguna lain yang memiliki pola rating serupa.
 
-Referensi:
-- Ricci, F., Rokach, L., & Shapira, B. (2011). *Recommender Systems Handbook*. Springer.
+Kedua pendekatan ini dipilih karena saling melengkapi: CBF efektif untuk pengguna dengan riwayat interaksi terbatas namun minat yang jelas, sementara CF unggul dalam menangkap pola preferensi kolektif pengguna. Dengan penerapan metode ini, sistem rekomendasi yang dikembangkan diharapkan mampu memberikan pengalaman menonton yang lebih personal, efisien, dan menyenangkan.
+
+### Referensi
 - Aggarwal, C. C. (2016). *Recommender Systems: The Textbook*. Springer.
 
 ## Business Understanding
@@ -91,7 +94,15 @@ df['genres_processed'] = df['genres'].str.replace('|', ' ')
 **Alasan:**  
 Transformasi ini diperlukan untuk memungkinkan penggunaan genre sebagai representasi teks (*text feature*) yang akan digunakan dalam pemodelan berbasis konten.
 
-### 3. Encoding ID Pengguna dan Film
+### 3. Ekstraksi Fitur dengan TF-IDF
+```python
+tfidf = TfidfVectorizer(stop_words='english')
+tfidf_matrix = tfidf.fit_transform(movies['genres_processed'])
+```
+**Alasan**
+Penggunaan `TfidfVectorizer` diperlukan untuk mengubah teks genre menjadi representasi vektor berbobot. Stop words dalam bahasa Inggris diabaikan. Tahapan ini dilakukan pada pemodelan CBF sebelum dilakukannya cosine similarity.
+
+### 4. Encoding ID Pengguna dan Film
 Nilai `userId` dan `movieId` diubah menjadi indeks numerik berturut-turut (mulai dari 0) yang dapat digunakan sebagai input embedding dalam model.
 
 ```python
@@ -106,7 +117,7 @@ df['movie'] = df['movieId'].map(movie2movie_encoded)
 **Alasan:**  
 Model machine learning tidak dapat bekerja langsung dengan ID kategorikal dalam bentuk string atau angka acak. Oleh karena itu, ID perlu di-*encode* ke dalam indeks integer untuk memungkinkan pembuatan embedding dan pelatihan model.
 
-### 4. Normalisasi Nilai Rating
+### 5. Normalisasi Nilai Rating
 Nilai rating yang awalnya berada pada skala 0.5 hingga 5 diubah ke dalam skala 0 hingga 1 dengan rumus:
 
 ```python
@@ -116,7 +127,7 @@ df['rating_norm'] = df['rating'].apply(lambda x: (x - min_rating) / (max_rating 
 **Alasan:**  
 Normalisasi nilai rating diperlukan agar model lebih stabil saat melakukan prediksi, terutama ketika menggunakan fungsi aktivasi seperti sigmoid atau relu. Skala yang konsisten (0–1) juga membantu mempercepat konvergensi model.
 
-### 5. Split Data Train dan Validasi
+### 6. Split Data Train dan Validasi
 Data diacak (*shuffled*) dan dibagi menjadi dua bagian: 90% untuk data pelatihan (*training*) dan 10% untuk data validasi (*validation*).
 
 ```python
@@ -129,7 +140,7 @@ val_df = df.iloc[train_size:]
 **Alasan:**  
 Pemecahan data menjadi train dan validasi penting untuk mengevaluasi kinerja model pada data yang tidak dilihat sebelumnya. Proses shuffle memastikan distribusi data acak dan tidak bias terhadap urutan aslinya.
 
-### 6. Mempersiapkan Input dan Target
+### 7. Mempersiapkan Input dan Target
 Variabel input (`x_train`, `x_val`) terdiri dari pasangan `user` dan `movie`, sementara target (`y_train`, `y_val`) adalah `rating_norm`.
 
 ```python
@@ -161,16 +172,13 @@ Cara Kerja:
 1. **Ambil Data Unik Film**  
    Mengambil data `movieId`, `title`, dan `genres_processed`, serta menghapus duplikat.
 
-2. **Ekstraksi Fitur dengan TF-IDF**  
-   Menggunakan `TfidfVectorizer` untuk mengubah teks genre menjadi representasi vektor berbobot. Stop words dalam bahasa Inggris diabaikan.
-
-3. **Perhitungan Kemiripan Cosine**  
+2. **Perhitungan Kemiripan Cosine**  
    Menghitung kesamaan antar film menggunakan cosine similarity dari vektor TF-IDF.
 
-4. **Mapping Judul ke Indeks**  
+3. **Mapping Judul ke Indeks**  
    Membuat mapping dari judul film ke indeks baris untuk akses cepat.
 
-5. **Fungsi Rekomendasi**  
+4. **Fungsi Rekomendasi**  
    Fungsi `recommend_movies_cbf()` menerima input judul film dan menghasilkan rekomendasi *top-N* film berdasarkan kemiripan konten.
 
 #### Fungsi `recommend_movies_cbf`
@@ -222,10 +230,6 @@ Cara kerja:
 
 2. **Normalisasi Rating**
    - Rating dinormalisasi ke rentang [0, 1] agar sesuai dengan output sigmoid model.
-   - Rumus:  
-     \[
-     rating\_norm = \frac{rating - min\_rating}{max\_rating - min\_rating}
-     \]
 
 3. **Split Data**
    - Dataset diacak dan dibagi menjadi 90% data pelatihan dan 10% data validasi.
@@ -317,6 +321,35 @@ def recommend_movies_cf(user_id, top_n=10):
 - Kualitas rekomendasi bergantung pada kepadatan matriks interaksi.
 - Lebih kompleks dalam pelatihan dan tuning dibanding CBF.
 
+## Hasil top-N
+```python
+print("Rekomendasi CBF untuk 'Toy Story (1995)':")
+print(recommend_movies_cbf('Toy Story (1995)', top_n=5))
+
+print("\nRekomendasi CF untuk user 1:")
+print(recommend_movies_cf(1, top_n=5))
+```
+* Baris pertama menjalankan fungsi `recommend_movies_cbf()` untuk memberikan rekomendasi film yang mirip dengan "Toy Story (1995)" berdasarkan fitur konten seperti genre atau kata kunci. Sistem menggunakan pendekatan Content-Based Filtering yang menilai kemiripan antar film untuk menyarankan 5 film yang paling serupa (`top_n=5`).
+* Baris kedua menggunakan fungsi `recommend_movies_cf()` untuk memberikan rekomendasi kepada pengguna dengan ID 1 berdasarkan pola kesamaan perilaku dengan pengguna lain. Sistem ini menerapkan Collaborative Filtering, yang menganalisis data rating dari banyak pengguna untuk menemukan kemiripan pola preferensi, kemudian merekomendasikan film yang disukai oleh pengguna lain dengan minat serupa. Sama seperti sebelumnya, `top_n=5` menunjukkan bahwa sistem akan mencetak lima rekomendasi film teratas.
+### Rekomendasi Content-Based Filtering (CBF) untuk **'Toy Story (1995)'**
+| Movie ID | Judul Film                             | Genre                                      |
+|----------|----------------------------------------|--------------------------------------------|
+| 735      | Toy Story 2 (1999)                     | Adventure Animation Children Comedy Fantasy |
+| 751      | Monsters, Inc. (2001)                  | Adventure Animation Children Comedy Fantasy |
+| 1592     | Antz (1998)                            | Adventure Animation Children Comedy Fantasy |
+| 1757     | Adventures of Rocky and Bullwinkle (2000) | Adventure Animation Children Comedy Fantasy |
+| 1802     | Emperor's New Groove, The (2000)       | Adventure Animation Children Comedy Fantasy |
+
+### Rekomendasi Collaborative Filtering (CF) untuk **User 1**
+| Movie ID | Judul Film                             | Genre                             |
+|----------|----------------------------------------|-----------------------------------|
+| 232      | Shawshank Redemption, The (1994)       | Crime Drama                       |
+| 233      | Good Will Hunting (1997)               | Drama Romance                     |
+| 254      | Whiplash (2014)                        | Drama                             |
+| 272      | Thing, The (1982)                      | Action Horror Sci-Fi Thriller     |
+| 276      | Fast Times at Ridgemont High (1982)    | Comedy Drama Romance              |
+
+
 ---
 
 ## Evaluation of Recommendation Models
@@ -373,7 +406,8 @@ Nilai RMSE yang rendah menunjukkan bahwa model cukup akurat dalam memprediksi ra
 Untuk memberikan pemahaman lebih lanjut terhadap perbedaan pendekatan CBF dan CF, ditampilkan dua grafik:
 
 - **CBF**: Menampilkan top-10 film yang paling mirip dengan film query (`Toy Story (1995)`) berdasarkan cosine similarity.
-- **CF**: Menampilkan top-10 film yang diprediksi paling disukai oleh pengguna tertentu (`User 387`) berdasarkan skor prediksi model.
+- **CF**: Menampilkan top-10 film yang diprediksi paling disukai oleh pengguna tertentu (`User 387`) berdasarkan skor prediksi model.<br>
+![image](https://github.com/user-attachments/assets/c0f261a9-11f8-4a43-a482-458d001529a5)
 
 Dapat disimpulkan:
 - CBF fokus pada **kemiripan konten** antar film.
